@@ -7,9 +7,13 @@ Describe "$scriptPath" {
     # Parse the function using AST
     $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$null, [ref]$astErrors)
 
+    Context 'Structure and Syntax' {
+        It 'Contains no errors' { $astErrors.Count | Should BeLessThan 1 }
+    }
+
     Context 'Script Analysis Rules' {
         $rules = Get-ScriptAnalyzerRule
-        $results = Invoke-ScriptAnalyzer -Path $scriptPath
+        $results = Invoke-ScriptAnalyzer -Path $scriptPath -ErrorAction Stop
 
         Foreach ($rule in $rules)
         {
@@ -18,10 +22,6 @@ Describe "$scriptPath" {
                 $violations.Count | Should Be 0
             }
         }
-    }
-
-    Context 'Structure and Syntax' {
-        It 'Contains no errors' { $astErrors.Count | Should BeLessThan 1 }
     }
 
     Context 'Comment-based help' {
