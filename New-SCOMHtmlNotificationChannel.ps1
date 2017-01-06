@@ -39,11 +39,14 @@
     Microsoft.EnterpriseManagement.Administration.SmtpNotificationAction
 .NOTES 
     Copyright 2016 Squared Up Limited, All Rights Reserved.
-.Link
+.LINK
     https://www.squaredup.com
+.LINK
     https://github.com/squaredup
 #>
-[CmdletBinding(SupportsShouldProcess=$true)]
+[CmdletBinding(
+    SupportsShouldProcess=$true, 
+    DefaultParameterSetName="New")]
 Param(
     [Parameter(
         ParameterSetName = 'Clone',
@@ -234,22 +237,13 @@ function Get-NotificationActionDescription {
     [CmdletBinding()]
     [OutputType([String])]
     Param(
-        [Parameter(
-            ParameterSetName = 'Clone',
-            Mandatory = $true
-        )]
-        [string]$BaseDisplayName,
-        
-        [Parameter(
-            ParameterSetName = 'New',
-            Mandatory = $true
-        )]
-        [Microsoft.EnterpriseManagement.ManagementGroup]$mg
+        [Parameter(Mandatory = $false)]
+        [string]$BaseDisplayName
     )
-    if ($PSCmdlet.ParameterSetName -eq "Clone"){
+    if ($PSBoundParameters.ContainsKey('BaseDisplayName')) {
         return "This is a modified copy of the '$BaseDisplayName' channel.  Any changes to the connection details of the original channel will be used automatically by this channel."
     } else {
-        return "Created on $([Datetime]::Now) by $($mg.ConnectionSettings.Domain)\$($mg.ConnectionSettings.UserName)"
+        return "Created on $([Datetime]::Now) by $(Get-SCOMConnectedUser)"
     }
 }
 
@@ -257,8 +251,7 @@ function New-SmtpChannel {
     [CmdletBinding(SupportsShouldProcess=$true)]
     Param(
         [string]$SquaredUpURL,
-        $ChannelSettings,
-        [Microsoft.EnterpriseManagement.ManagementGroup]$mg,
+        $ChannelSettings,        
         [switch]$PlainText,
         [switch]$HighImportance
     )
@@ -287,13 +280,13 @@ function New-SmtpChannel {
     if ($null -eq $ChannelSettings.EndPoint.Id -and $pscmdlet.ShouldProcess("$($ChannelSettings.EndPoint.PrimaryServer.Address) on port $($ChannelSettings.EndPoint.PrimaryServer.PortNumber) using $($ChannelSettings.EndPoint.PrimaryServer.AuthenticationType) authentication","Create SMTP Endpoint"))
     {
         Write-Verbose -Message "Creating SMTP Endpoint '$($ChannelSettings.EndPoint.PrimaryServer.Address)' on port $($ChannelSettings.EndPoint.PrimaryServer.PortNumber) using $($ChannelSettings.EndPoint.PrimaryServer.AuthenticationType) authentication" -Verbose:$VerbosePreference
-        $mg.InsertNotificationEndpoint($ChannelSettings.EndPoint)
+        Save-SCOMNotificationEndpoint -NotificationEndpoint $ChannelSettings.EndPoint
     }  
 
     if ($pscmdlet.ShouldProcess($action.DisplayName,"Create SMTP Notification channel"))
     {
         Write-Verbose -Message "Creating SMTP notification channel '$($action.DisplayName)'" -Verbose:$VerbosePreference
-        $mg.InsertNotificationAction($action)
+        Save-SCOMNotificationAction -NotificationAction $action
         return $action
     }    
 }
@@ -304,87 +297,202 @@ function New-SmtpEndpoint {
     [OutputType([Microsoft.EnterpriseManagement.Administration.SmtpNotificationEndpoint])]
     Param(
         [string]$Name,
-        [int]$RetryIntervalMins,
-        [string]$FQDN,
-        [int]$Port,
-        [string]$Authentication,
+        [int]$SMTPRetryMins,
+        [string]$SMTPServerFQDN,
+        [int]$SMTPServerPort,
+        [string]$SMTPAuthentication,
         [string]$Description
     )
 
-    $primaryServer = New-Object -TypeName 'Microsoft.EnterpriseManagement.Administration.SmtpServer' -ArgumentList $FQDN
-    $primaryServer.AuthenticationType = $Authentication
-    $primaryServer.PortNumber = $Port
+    $primaryServer = New-Object -TypeName 'Microsoft.EnterpriseManagement.Administration.SmtpServer' -ArgumentList $SMTPServerFQDN
+    $primaryServer.AuthenticationType = $SMTPAuthentication
+    $primaryServer.PortNumber = $SMTPServerPort
 
     $endpoint = New-Object -TypeName 'Microsoft.EnterpriseManagement.Administration.SmtpNotificationEndpoint' -ArgumentList "SMTPEndpoint$([guid]::NewGuid().Guid.replace('-','_'))",'Smtp',$primaryServer
-    $endpoint.PrimaryServerSwitchBackIntervalSeconds = $RetryIntervalMins * 60
+    $endpoint.PrimaryServerSwitchBackIntervalSeconds = $SMTPRetryMins * 60
     $endpoint.DisplayName = "SMTPEndpoint for $Name"
     $endpoint.Description = $Description
 
     return $endpoint
 }
 
-# Normalise SquaredUpURL
-if ([string]::IsNullOrEmpty($SquaredUpURL) -eq $false) {
-    $SquaredUpURL  = $SquaredUpURL.TrimEnd('/')
-    if ($SquaredUpURL -notmatch '^https?://') {    
-        $SquaredUpURL = "http://$SquaredUpURL"
-        Write-Verbose -Message "Set base url to '$SquaredUpURL'" -Verbose:$VerbosePreference
+function Convert-SquaredUpUrl {
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param(
+        [string]$Url
+    )
+
+    $Url  = $Url.TrimEnd('/')
+
+    if ($Url -notmatch '^https?://') {    
+        $Url = "http://$Url"
+        Write-Verbose -Message "Set Squared Up URL to '$Url'" -Verbose:$VerbosePreference
     }
+    
+    if ([System.Uri]::IsWellFormedUriString($Url, [System.UriKind]::Absolute) -eq $false) {
+        Throw "'$Url' is an invalid URL."
+    }
+    
+    return $Url
+}
+
+function New-ChannelSettings {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseShouldProcessForStateChangingFunctions", "")]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseSingularNouns", "")]
+    [OutputType([PSCustomObject])]
+    [CmdletBinding()]
+    Param(
+        [string]$Description,
+        [int]$SMTPRetryMins,
+        [string]$SMTPServerFQDN,
+        [int]$SMTPServerPort,
+        [string]$SMTPAuthentication,
+        [string]$SMTPFromAddress
+    )
+
+    $endpointParams = Get-ParametersFromHashtable -Function "New-SmtpEndpoint" $PSBoundParameters    
+    return [PSCustomObject]@{
+            "Description" = $description;
+            "BodyEncoding" = "utf-8";   
+            "Endpoint" = New-SmtpEndpoint -Name "Advanced Notifications" @endpointParams
+            "From" = $SMTPFromAddress;            
+            "ReplyTo" = $SMTPFromAddress;
+            "SubjectEncoding" = "utf-8";
+    }
+}
+
+function Copy-ChannelSettings {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseSingularNouns", "")]
+    [OutputType([PSCustomObject])]
+    [CmdletBinding()]
+    Param(
+        [string]$BaseSmtpChannel
+    )  
+
+    $baseSmtpAction = Get-SCOMNotificationAction -DisplayNameOrId $BaseSmtpChannel
+    
+    Write-Verbose "Using '$($baseSmtpAction.DisplayName)' as a template"
+
+    # Create settings object and return
+    return [PSCustomObject]@{
+        "Description" = Get-NotificationActionDescription -BaseDisplayName $baseSmtpAction.DisplayName;
+        "BodyEncoding" = $baseSmtpAction.BodyEncoding;
+        "Endpoint" = $baseSmtpAction.Endpoint;
+        "From" = $baseSmtpAction.From;            
+        "ReplyTo" = $baseSmtpAction.ReplyTo;
+        "SubjectEncoding" = $baseSmtpAction.SubjectEncoding;
+    }
+}
+
+function Get-ParametersFromHashtable {
+    [CmdletBinding()]
+    [OutputType([System.Collections.Hashtable])]
+    Param(
+        [string]$Function,
+        [HashTable]$Parameters
+    )
+    
+    $finalParameters = @{}
+
+    # Filter out parameters that the target function doesn't accept
+    foreach ($param in (get-command $Function).Parameters.Keys) {
+        if ($Parameters.ContainsKey($param)) {
+            $finalParameters[$param] = $Parameters[$param]
+        }
+    }
+    return $finalParameters
+}
+
+function Get-SCOMConnectedUser {
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param()
+
+    $connectionSettings = (Get-SCOMManagementGroup -ErrorAction Stop).ConnectionSettings
+    return "$($onnectionSettings.Domain)\$($connectionSettings.UserName)"
+}
+
+function Save-SCOMNotificationAction {
+    [CmdletBinding()]    
+    Param(
+        [Microsoft.EnterpriseManagement.Administration.NotificationAction]$NotificationAction
+    )
+    if ($null -eq $NotificationAction.Id) {
+        (Get-SCOMManagementGroup -ErrorAction Stop).InsertNotificationAction($NotificationAction)
+    } else {
+        $NotificationAction.Update()
+    }    
+}
+
+function Save-SCOMNotificationEndpoint {
+    [CmdletBinding()]    
+    Param(
+        [Microsoft.EnterpriseManagement.Administration.NotificationEndpoint]$NotificationEndpoint
+    )
+    if ($null -eq $NotificationEndpoint.Id) {
+        (Get-SCOMManagementGroup -ErrorAction Stop).InsertNotificationEndpoint($NotificationEndpoint)
+    } else {
+        $NotificationEndpoint.Update()
+    }    
+}
+
+function Get-SCOMNotificationAction {
+    [CmdletBinding()]
+    [OutputType([Microsoft.EnterpriseManagement.Administration.NotificationAction])]
+    Param(        
+        [string]$DisplayNameOrId
+    )
+    # Test if we have a GUID or a displayname specified for the base channel
+    $guid = [guid]::Empty
+    if ([guid]::TryParse($DisplayNameOrId, [ref] $guid)) {
+        return (Get-SCOMManagementGroup -ErrorAction Stop).GetNotificationAction($guid)
+    }
+    else {
+        $action = (Get-SCOMNotificationChannel -DisplayName $DisplayNameOrId).Action
+
+        # Ensure that we found an appropriate channel to clone
+        if ($null -eq $action)
+        {
+            Throw "The notification channel '$DisplayNameOrId' could not be found."
+        }
+    }
+}
+
+# Bind default parameter values as if user had specified them
+foreach ($param in $MyInvocation.MyCommand.Parameters.Keys) {
+    $value = Get-Variable $param -ValueOnly -ErrorAction SilentlyContinue
+    if ($value -and !$PSBoundParameters.ContainsKey($param)) {
+        $PSBoundParameters[$param] = $value
+    }
+}
+
+# Normalise SquaredUpURL
+if ($PSBoundParameters.ContainsKey("SquaredUpURL")) {
+    $SquaredUpURL  = Convert-SquaredUpUrl -Url $SquaredUpURL
 }
 
 # Main block
 try{
-
-    # Get SCOM SDK connection for use when creating/modifying actions.
-    $mg = Get-SCOMManagementGroup -ErrorAction Stop
-
-    # Construct Endpoint Settings
+    # Construct Channel Settings
     $channelSettings = $null
-    if ($PSCmdlet.ParameterSetName -eq "New") {
-
-        $description = Get-NotificationActionDescription -mg $mg
-        $channelSettings = [PSCustomObject]@{
-            "Description" = $description;
-            "BodyEncoding" = "utf-8";   
-            "Endpoint" = New-SmtpEndpoint -Name "Advanced Notifications" -RetryIntervalMins $SMTPRetryMins -FQDN $SMTPServerFQDN -Port $SMTPServerPort -Authentication $SMTPAuthentication -Description $description;
-            "From" = $SMTPFromAddress;            
-            "ReplyTo" = $SMTPFromAddress;
-            "SubjectEncoding" = "utf-8";
+    switch ($PSCmdlet.ParameterSetName) {
+        "New" {
+            # Create a new endpoint and use user specified channel settings.
+            $params = Get-ParametersFromHashtable -Function "New-ChannelSettings" -Parameters $PSBoundParameters
+            $channelSettings = New-ChannelSettings -Description (Get-NotificationActionDescription) @params
         }
-
-    } elseif ($PSCmdlet.ParameterSetName -eq "Clone") {
-
-        # Test if we have a GUID or a displayname specified for the base channel
-        $baseSmtpChannelGuid = [guid]::Empty
-        if ([guid]::TryParse($BaseSmtpChannel, [ref] $baseSmtpChannelGuid)) {
-            $baseSmtpAction = $mg.GetNotificationAction($baseSmtpChannelGuid)
+        "Clone" {
+            # Copy an existing channel settings and use existing endpoint
+            $channelSettings = Copy-ChannelSettings -BaseSmtpChannel $BaseSmtpChannel
         }
-        else {
-            $baseSmtpAction = (Get-SCOMNotificationChannel -DisplayName $BaseSmtpChannel).Action
+        default {
+            Throw "Unable to determine source of SMTP channel settings"
         }
-
-        if ($null -eq $baseSmtpAction)
-        {
-            Throw "The notification channel '$BaseSmtpChannel' could not be found."
-        }
-        
-        Write-Verbose "Using '$($baseSmtpAction.DisplayName)' as a template"
-
-        $channelSettings = [PSCustomObject]@{
-            "Description" = Get-NotificationActionDescription -BaseDisplayName $baseSmtpAction.DisplayName;
-            "BodyEncoding" = $baseSmtpAction.BodyEncoding;
-            "Endpoint" = $baseSmtpAction.Endpoint;
-            "From" = $baseSmtpAction.From;            
-            "ReplyTo" = $baseSmtpAction.ReplyTo;
-            "SubjectEncoding" = $baseSmtpAction.SubjectEncoding;
-        }
-    } else {
-        Throw "Unable to determine source of SMTP endpoint settings"
     }
 
     # Create Channel
-    New-SmtpChannel -SquaredUpURL $SquaredUpURL -ChannelSettings $channelSettings -mg $mg -HighImportance:$HighImportance -PlainText:$PlainText
-
+    New-SmtpChannel -SquaredUpURL $SquaredUpURL -ChannelSettings $channelSettings -HighImportance:$HighImportance -PlainText:$PlainText
 }
 catch
 {
