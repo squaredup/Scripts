@@ -1,3 +1,7 @@
+<#
+.SYNOPSIS
+    Test file for Pester that will ensure all non-test scripts are syntactically correct, meet best practices and include detailed comment-based help
+#>
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $scripts = Get-ChildItem $here -Recurse -File -Include '*.ps1' -Exclude '*.Tests.ps1'
 
