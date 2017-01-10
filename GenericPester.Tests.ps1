@@ -1,9 +1,15 @@
 <#
 .SYNOPSIS
     Test file for Pester that will ensure all non-test scripts are syntactically correct, meet best practices and include detailed comment-based help
+.PARAMETER Path
+    Optional. A list of folder or file paths that will be examined for scripts to test.  Defaults to the invocation path to support running via Invoke-Pester
 #>
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$scripts = Get-ChildItem $here -Recurse -File -Include '*.ps1' -Exclude '*.Tests.ps1'
+[CmdletBinding()]
+Param(
+    [Parameter(Mandatory = $false)]
+    [string[]]$Path = (Split-Path -Parent $MyInvocation.MyCommand.Path)
+)
+$scripts = Get-ChildItem $Path -Recurse -File -Include '*.ps1' -Exclude '*.Tests.ps1'
 
 foreach ($script in $scripts)
 {
@@ -41,7 +47,10 @@ foreach ($script in $scripts)
         Context 'Comment-based help' {
             $help = Get-help $scriptPath -full
 
-            It "Includes a Synopsis"{ $help.Synopsis | Should not BeNullOrEmpty }
+            It "Includes a Synopsis" { 
+                $help.Synopsis | Should not BeNullOrEmpty 
+                $help.Synopsis | Should Not Match (Split-Path -Leaf $scriptPath)
+            }
             It "Includes a Description"{ $help.Description | Should not BeNullOrEmpty }
             It "Notes include copyright notice" { $help.alertSet.alert.text | Should Match 'Copyright \d{4} Squared Up (Limited|Ltd)' }
 
@@ -76,8 +85,9 @@ foreach ($script in $scripts)
 
             # Links
             It "Should have at least one link to SquaredUp.com" {
-                $websiteLinks = $help.relatedLinks.navigationLink.uri -match '^(https?://)?(www\.)?squaredup\.com'| Measure-Object
+                $websiteLinks = $help.relatedLinks.navigationLink.uri | Where-Object {$_ -match '^(https?://)?(www\.)?squaredup\.com' } | Measure-Object
                 $websiteLinks.Count | Should BeGreaterthan 0
+                
             }
         }
     }
