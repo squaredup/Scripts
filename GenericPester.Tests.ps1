@@ -21,7 +21,7 @@ foreach ($script in $scripts)
 
         Context 'Structure and Syntax' {
             It 'Contains no errors' { $astErrors.Count | Should BeLessThan 1 }
-            It 'Has a valid signiture (if signed)' {
+            It 'Has a valid signature (if signed)' {
                 $result = Get-AuthenticodeSignature $scriptPath
                 if ($result.Status -eq [System.Management.Automation.SignatureStatus]::NotSigned) {
                     $true | Should Be $true
@@ -52,7 +52,7 @@ foreach ($script in $scripts)
                 $help.Synopsis | Should Not Match (Split-Path -Leaf $scriptPath)
             }
             It "Includes a Description"{ $help.Description | Should not BeNullOrEmpty }
-            It "Notes include copyright notice" { $help.alertSet.alert.text | Should Match 'Copyright \d{4} Squared Up (Limited|Ltd)' }
+            It "Notes include copyright notice" { $help.alertSet.alert.text | Should Match "Copyright $([DateTime]::Now.Year) Squared Up (Limited|Ltd)" }
 
             $riskMitigationParameters = 'Whatif', 'Confirm'
             $helpParameters = $help.parameters.parameter | Where-Object name -NotIn $RiskMitigationParameters
