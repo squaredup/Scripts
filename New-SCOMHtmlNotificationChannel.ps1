@@ -4,9 +4,9 @@
 .DESCRIPTION
     This script will create SCOM notification channels with HTML formatting options enabled. This allows for significantly richer notification templates.
 
-    Channels can either be created from scratch or clone their settings from an existing channel (and will therefore use it's predefined endpoints).
+    Channels can either be created from scratch or clone their settings from an existing channel (and will therefore use its predefined endpoints).
 
-    By default notification bodies will include appropriate links to the SCOM Web console, but by specifying the SquaredUpUrl parameter links will use Squared Up instead.
+    By default notification bodies will include appropriate links to the SCOM Web Console, but by specifying the -SquaredUpURL parameter links will use Squared Up instead.
 
     Please ensure that a management group connection exists prior to running the script - either run this from the Operations Manager shell or run New-SCOMManagementGroupConnection.
 .PARAMETER SquaredUpURL
@@ -38,7 +38,7 @@
 .OUTPUTS
     Microsoft.EnterpriseManagement.Administration.SmtpNotificationAction
 .NOTES 
-    Copyright 2016 Squared Up Limited, All Rights Reserved.
+    Copyright 2017 Squared Up Limited, All Rights Reserved.
 .LINK
     https://www.squaredup.com
 .LINK
@@ -153,7 +153,7 @@ function Get-NotificationActionBody {
         return [string]::Join("`n", @(
             "<!DOCTYPE html>",
             "<html><head>",
-            "<!-- (c) Squared Up Ltd 2016 -->",
+            "<!-- (c) Squared Up Ltd 2017 -->",
             "<style>div span{{display:none;text-decoration:line-through;}}.y{{display:inline;text-decoration:none;}}.s-$Severity{{display:inline;text-decoration:none;}}.m-$CreatedByMonitor{{display:inline;text-decoration:none;}}.t{{font-weight:bold;}}.b{{background:#f1f1f1;}}.b-2-New{{background:#FF3E3E;}}.b-1-New{{background:#FDC700;}}.b-0-New{{background:#5F9ECA;}}</style>",
             "</head>",
             "<body style='font-size:0.8em;font-family:arial;line-height:1.5em;color:#444444;'>",
