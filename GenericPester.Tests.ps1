@@ -73,7 +73,8 @@ foreach ($script in $scripts)
 
             # Examples
             It "Should have at least one example"{
-                $help.examples.example.count | Should BeGreaterthan 0
+                $helpExamples = $help.examples.example | Measure-Object
+                $helpExamples.count | Should BeGreaterthan 0
             }
             
             foreach ($example in $help.examples.example)
