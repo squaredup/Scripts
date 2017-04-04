@@ -154,7 +154,7 @@ function Get-NotificationActionBody {
             "<!DOCTYPE html>",
             "<html><head>",
             "<!-- (c) Squared Up Ltd 2017 -->",
-            "<style>div span{{display:none;text-decoration:line-through;}}.y{{display:inline;text-decoration:none;}}.s-$Severity{{display:inline;text-decoration:none;}}.m-$CreatedByMonitor{{display:inline;text-decoration:none;}}.t{{font-weight:bold;}}.b{{background:#f1f1f1;}}.b-2-New{{background:#FF3E3E;}}.b-1-New{{background:#FDC700;}}.b-0-New{{background:#5F9ECA;}}</style>",
+            "<style>div span{display:none;text-decoration:line-through;}.y{display:inline;text-decoration:none;}.s-$Severity{display:inline;text-decoration:none;}.m-$CreatedByMonitor{display:inline;text-decoration:none;}.t{font-weight:bold;}.b{background:#f1f1f1;}.b-2-New{background:#FF3E3E;}.b-1-New{background:#FDC700;}.b-0-New{background:#5F9ECA;}</style>",
             "</head>",
             "<body style='font-size:0.8em;font-family:arial;line-height:1.5em;color:#444444;'>",
             "<div>",
@@ -456,6 +456,8 @@ function Get-SCOMNotificationAction {
         {
             Throw "The notification channel '$DisplayNameOrId' could not be found."
         }
+
+        return $action
     }
 }
 
