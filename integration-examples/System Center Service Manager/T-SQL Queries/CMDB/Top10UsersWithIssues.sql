@@ -4,16 +4,16 @@ SELECT TOP 10
     usr.DisplayName as Name, 
     usr.Department_312201FE_C1B3_E95A_01DF_E132E9BD3EC9 as Department,
     email.Email
-FROM MTV_System$WorkItem$Incident (NOLOCK) incident
-    INNER JOIN RelationshipView affectedUser WITH (NOLOCK) ON incident.BaseManagedEntityId = affectedUser.SourceEntityId 
+FROM MTV_System$WorkItem$Incident incident
+    INNER JOIN RelationshipView affectedUser ON incident.BaseManagedEntityId = affectedUser.SourceEntityId 
         and affectedUser.RelationshipTypeId = 'DFF9BE66-38B0-B6D6-6144-A412A3EBD4CE' -- System.WorkItemAffectedUser
-    INNER JOIN MTV_System$Domain$User usr with (nolock) on affectedUser.TargetEntityId = usr.BaseManagedEntityId
+    INNER JOIN MTV_System$Domain$User usr on affectedUser.TargetEntityId = usr.BaseManagedEntityId
     LEFT OUTER JOIN(
         Select 
             r.SourceEntityId,
             email.TargetAddress_F96D8DDF_E33A_40B0_4039_F03C3D292F17 as Email
-        from RelationshipView (NOLOCK) r
-            INNER JOIN MTV_System$Notification$Endpoint email WITH (NOLOCK) on r.TargetEntityId = email.BaseManagedEntityId
+        from RelationshipView r
+            INNER JOIN MTV_System$Notification$Endpoint email on r.TargetEntityId = email.BaseManagedEntityId
         where 
             email.ChannelName_B4672CDC_4B7C_54C9_F140_274DA6D1B56A = 'SMTP'
             and r.RelationshipTypeId = '649E37AB-BF89-8617-94F6-D4D041A05171' -- System.UserHasPreference

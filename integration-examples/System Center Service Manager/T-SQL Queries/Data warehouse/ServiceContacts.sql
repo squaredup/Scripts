@@ -5,10 +5,10 @@ SELECT
     contact.BusinessPhone,
     contact.Mobile,
     Concat(contact.FirstName,'.',contact.LastName,'@squaredup.com') as Email
-FROM UserDimvw as contact (NOLOCK)
-	INNER JOIN ConfigItemServicedByUserFactvw as servicedBy with (NOLOCK) on contact.UserDimKey = servicedBy.ConfigItemServicedByUser_UserDimKey
-    INNER JOIN ConfigItemDimvw as ci with (NOLOCK) on servicedBy.ConfigItemDimKey = ci.ConfigItemDimKey 
-    INNER JOIN ServiceDimvw as service with (NOLOCK) on service.BaseManagedEntityId = ci.BaseManagedEntityId
+FROM UserDimvw as contact
+	INNER JOIN ConfigItemServicedByUserFactvw as servicedBy on contact.UserDimKey = servicedBy.ConfigItemServicedByUser_UserDimKey
+    INNER JOIN ConfigItemDimvw as ci on servicedBy.ConfigItemDimKey = ci.ConfigItemDimKey 
+    INNER JOIN ServiceDimvw as service on service.BaseManagedEntityId = ci.BaseManagedEntityId
 WHERE 
     service.BaseManagedEntityId = '00000000-0000-0000-0000-000000000000'
     AND     

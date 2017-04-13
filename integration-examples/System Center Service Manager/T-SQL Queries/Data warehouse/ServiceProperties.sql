@@ -11,18 +11,18 @@ service.BaseManagedEntityId,
 	service.OwnedByOrganization,
 	service.ServiceDescription,
 	service.BusinessDetailedDescription
-FROM ServiceDimvw as service (NOLOCK)
-	INNER JOIN ConfigItemDimvw as ci WITH (NOLOCK) on service.EntityDimKey = ci.EntityDimKey
-	LEFT OUTER JOIN ConfigItemOwnedByUserFactvw as ownedBy WITH (NOLOCK) on ownedby.ConfigItemDimKey = ci.ConfigItemDimKey
-	LEFT OUTER JOIN UserDimvw as owner with (NOLOCK) on ownedBy.ConfigItemOwnedByUser_UserDimKey = owner.UserDimKey
-	LEFT OUTER JOIN ServiceStatusvw as status with (NOLOCK) ON status.ServiceStatusId = service.Status_ServiceStatusId
-	LEFT OUTER JOIN DisplayStringDimvw as statusString WITH (NOLOCK) on status.EnumTypeId = statusString.BaseManagedEntityId 
+FROM ServiceDimvw as service 
+	INNER JOIN ConfigItemDimvw as ci on service.EntityDimKey = ci.EntityDimKey
+	LEFT OUTER JOIN ConfigItemOwnedByUserFactvw as ownedBy  on ownedby.ConfigItemDimKey = ci.ConfigItemDimKey
+	LEFT OUTER JOIN UserDimvw as owner on ownedBy.ConfigItemOwnedByUser_UserDimKey = owner.UserDimKey
+	LEFT OUTER JOIN ServiceStatusvw as status ON status.ServiceStatusId = service.Status_ServiceStatusId
+	LEFT OUTER JOIN DisplayStringDimvw as statusString on status.EnumTypeId = statusString.BaseManagedEntityId 
 		AND statusString.LanguageCode = 'ENU'
-	LEFT OUTER JOIN ServicePriorityvw as priority with (NOLOCK) ON priority.ServicePriorityId = service.Priority_ServicePriorityId
-	LEFT OUTER JOIN DisplayStringDimvw as priorityString WITH (NOLOCK) on priority.EnumTypeId = priorityString.BaseManagedEntityId 
+	LEFT OUTER JOIN ServicePriorityvw as priority ON priority.ServicePriorityId = service.Priority_ServicePriorityId
+	LEFT OUTER JOIN DisplayStringDimvw as priorityString on priority.EnumTypeId = priorityString.BaseManagedEntityId 
 		AND priorityString.LanguageCode = 'ENU'
-	LEFT OUTER JOIN ServiceClassificationvw as classification with (NOLOCK) ON classification.ServiceClassificationId = service.Classification_ServiceClassificationId
-	LEFT OUTER JOIN DisplayStringDimvw as classificationString WITH (NOLOCK) on classification.EnumTypeId = classificationString.BaseManagedEntityId 
+	LEFT OUTER JOIN ServiceClassificationvw as classification ON classification.ServiceClassificationId = service.Classification_ServiceClassificationId
+	LEFT OUTER JOIN DisplayStringDimvw as classificationString on classification.EnumTypeId = classificationString.BaseManagedEntityId 
 		AND classificationString.LanguageCode = 'ENU'
 WHERE
 	service.BaseManagedEntityId = '00000000-0000-0000-0000-000000000000'
