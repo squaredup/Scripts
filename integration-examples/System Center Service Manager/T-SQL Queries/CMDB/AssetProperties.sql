@@ -1,6 +1,6 @@
 -- Show selected properties from computers (that typically aren't in SCOM)
 SELECT
-    computer.OrganizationalUnit as 'Active directory OU', 
+    computer.OrganizationalUnit as 'Active Directory OU', 
     usr.DisplayName as Custodian, 
     assetStatus.DisplayName As Status, 	
     computer.Notes_5CFC0E2A_AB82_5830_D4BB_0596CBED1984 as Notes

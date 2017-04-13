@@ -1,8 +1,8 @@
 -- Select service contacts from a Business Service
 Select usr.DisplayName,
-	usr.Department_312201FE_C1B3_E95A_01DF_E132E9BD3EC9 as Department
-	,email.email as Email
-	,BusinessPhone_DF56B912_F9E0_3565_4228_086CEABE35C2 as Phone
+	usr.Department_312201FE_C1B3_E95A_01DF_E132E9BD3EC9 as Department,
+	email.email as Email,
+	BusinessPhone_DF56B912_F9E0_3565_4228_086CEABE35C2 as Phone
 FROM MTV_System$Domain$User usr (NOLOCK)
     Inner JOIN RelationshipView contact WITH (NOLOCK) on contact.TargetEntityId = usr.BaseManagedEntityId
         and contact.RelationshipTypeId = 'DD01FC9B-20CE-EA03-3EC1-F52B3241B033' -- System.ConfigItemServicedByUser

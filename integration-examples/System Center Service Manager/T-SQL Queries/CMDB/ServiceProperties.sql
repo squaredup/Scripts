@@ -12,6 +12,6 @@ FROM MTV_Service_sales$app da
     LEFT OUTER JOIN fn_EnumerationsView('ENG','ENU') enumStatus on da.Status_0689C997_03F2_83DE_C0E7_FB8E18574552 = enumStatus.id
     LEFT OUTER JOIN fn_EnumerationsView('ENG','ENU') enumClassification on da.Classification_EE738100_A25A_F850_7195_ADBD21E8D019 = enumClassification.id    
     LEFT OUTER JOIN RelationshipView ownedBy WITH (NOLOCK) on ownedBy.SourceEntityId = da.BaseManagedEntityId
-      and ownedBy.RelationshipTypeId='CBB45424-B0A2-72F0-D535-541941CDF8E1' --System.ConfigItemOwnedByUser
-      and ownedBy.IsDeleted=0
+      and ownedBy.RelationshipTypeId = 'CBB45424-B0A2-72F0-D535-541941CDF8E1' --System.ConfigItemOwnedByUser
+      and ownedBy.IsDeleted = 0
     LEFT OUTER JOIN MTV_System$Domain$User usr WITH (NOLOCK) on ownedBy.TargetEntityId = usr.BaseManagedEntityId

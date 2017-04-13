@@ -13,3 +13,4 @@ FROM MT_System$WorkItem$Incident (NOLOCK) incident
 WHERE 
     incStatus.DisplayName NOT IN ('Resolved', 'Closed')
     AND incident.CreatedDate_6258638D_B885_AB3C_E316_D00782B8F688 > DATEADD(HOUR,-24,GETUTCDATE())
+    
