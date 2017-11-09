@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>SampleExtended</ID>
+      <Version>1.0.0.0</Version>
+    </Identity>
+    <Name>SampleExtended</Name>
+    <References>
+      <Reference Alias="SC">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="Sample.Computer.Extended" Base="Windows!Microsoft.Windows.Computer" Accessibility="Public" Abstract="false" Hosted="false" Singleton="false">
+          <!-- We  declared our Class above (the mpelement), 
+         now we need to declare the subelements (the properties).-->
+          <Property ID="Application" Key="false" Type="string" />
+          <Property ID="BuildPlatform" Key="false" Type="string" />
+          <Property ID="Environment" Key="false" Type="string" />
+          <Property ID="Location" Key="false" Type="string" />
+          <Property ID="OperatingSystem" Key="false" Type="string" />
+          <Property ID="Purpose" Key="false" Type="string" />
+          <Property ID="Team" Key="false" Type="string" />
+        </ClassType>
+      </ClassTypes>
+    </EntityTypes>
+    <ModuleTypes>
+      <WriteActionModuleType ID="SampleExtended.WriteAction.DiscoveryTrigger" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="ManagementGroupId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="DiscoveryId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetInstanceId" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TaskTimeoutSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="DiscoveryId" Selector="$Config/DiscoveryId$" ParameterType="string" />
+          <OverrideableParameter ID="TargetInstanceId" Selector="$Config/TargetInstanceId$" ParameterType="string" />
+          <OverrideableParameter ID="TaskTimeoutSeconds" Selector="$Config/TaskTimeoutSeconds$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Native>
+            <ClassID>31742191-31A5-4C93-9D9B-92E6CD2FA665</ClassID>
+          </Native>
+        </ModuleImplementation>
+        <OutputType>System!System.BaseData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
+      <WriteActionModuleType ID="SampleExtended.WriteAction.SetRegistryKeys" Accessibility="Public" Batching="false">
+        <Configuration>
+          <xsd:element name="Application" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="BuildPlatform" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Environment" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Location" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Purpose" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Team" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="OperatingSystem" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Application" Selector="$Config/Application$" ParameterType="string" />
+          <OverrideableParameter ID="BuildPlatform" Selector="$Config/BuildPlatform$" ParameterType="string" />
+          <OverrideableParameter ID="Environment" Selector="$Config/Environment$" ParameterType="string" />
+          <OverrideableParameter ID="Location" Selector="$Config/Location$" ParameterType="string" />
+          <OverrideableParameter ID="Purpose" Selector="$Config/Purpose$" ParameterType="string" />
+          <OverrideableParameter ID="Team" Selector="$Config/Team$" ParameterType="string" />
+          <OverrideableParameter ID="OperatingSystem" Selector="$Config/OperatingSystem$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="PS" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>SetRegistryKeys.ps1</ScriptName>
+                <ScriptBody><![CDATA[<#
+.SYNOPSIS
+	Sets registry keys for Sample - Extended Discovery.
+.DESCRIPTION
+	This script is used by the Sample - Extended discovery to 
+	set registry keys for Servers.
+.PARAMETER Application
+	The application the server runs
+.PARAMETER BuildPlatform
+	The platform used to deploy this server
+.PARAMETER Environment
+	The environment the server resides in
+.PARAMETER Location
+	Where the server is located
+.PARAMETER Purpose
+	The purpose of the server
+.PARAMETER Team
+	The team that owns the server
+.PARAMETER OperatingSystem
+	The Operating System Installed
+
+#>
+# -----------------------------------------------------------------------------
+# Script Name: SetRegistryKeys.ps1
+# -----------------------------------------------------------------------------
+# Define Parameters
+[CmdletBinding()]
+Param(
+	[string]$Application,
+	[string]$BuildPlatform,
+	[string]$Environment,
+	[string]$Location,
+	[string]$Purpose,
+	[string]$Team,
+	[string]$OperatingSystem
+)
+
+# Set variables
+
+$registyLocation = 'HKLM:\'
+$registryPath = "SOFTWARE\MyOrg"
+$registryPathNew = "MyOrg"
+$finalLocation = Join-Path -Path $registyLocation $registryPath
+$keyList = @{"Application" = "$Application"; "BuildPlatform"= "$BuildPlatform"; "Environment" = "$Environment"; "Location"= "$Location"; "Purpose" = "$Purpose"; "Team" = "$team";"OperatingSystem" = "$OperatingSystem"}
+$momApi = New-Object -ComObject "MOM.ScriptAPI"
+
+# Move into registry
+
+Set-Location $registyLocation
+
+# Check if $finalLocation exists, if it does not, create it
+
+Write-Host "Checking if registry location exists..."
+
+If (!(Test-Path -Path $finalLocation)) {
+
+        Write-Host "$registryPathNew does not exist.. Creating..."
+
+        New-Item -Path "SOFTWARE" -Name $registryPathNew
+
+        Write-Host "$finalLocation created"
+
+        Write-Host "Creating keys..."
+
+        foreach ($key in $keyList.Keys) {
+
+            New-ItemProperty -Path $finalLocation -Name $key -PropertyType "String" -Value $keyList[$key] -Force | Out-Null
+
+            Write-Host "$key Created"
+
+	        }
+
+        Write-Host "Keys created..."
+
+        Write-Host "Keys are..."
+
+        Get-Item -Path $finalLocation
+
+    }
+
+    Else {
+
+        Write-Host "$finalLocation exists..."
+
+        Write-Host "Keys are currently set as..."
+        
+        Get-Item -Path $finalLocation
+        
+        Write-Host  "Updating Keys..."
+
+        foreach ($key in $keyList.Keys) {
+
+			If (-not [string]::IsNullOrEmpty($keyList[$key])) {
+
+				New-ItemProperty -Path $finalLocation -Name $key -PropertyType "String" -Value $keyList[$key] -Force | Out-Null
+
+				
+			}
+	    }
+
+        Get-Item -Path $finalLocation
+
+    }
+]]></ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>Application</Name>
+                    <Value>$Config/Application$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>BuildPlatform</Name>
+                    <Value>$Config/BuildPlatform$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Environment</Name>
+                    <Value>$Config/Environment$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Location</Name>
+                    <Value>$Config/Location$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Purpose</Name>
+                    <Value>$Config/Purpose$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>Team</Name>
+                    <Value>$Config/Team$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>OperatingSystem</Name>
+                    <Value>$Config/OperatingSystem$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+              </WriteAction>
+              <WriteAction ID="DiscoveryTrigger" TypeID="SampleExtended.WriteAction.DiscoveryTrigger">
+                <ManagementGroupId>$Target/ManagementGroup/Id$</ManagementGroupId>
+                <DiscoveryId>$MPElement[Name="Sample.Computer.Extended.Discovery"]$</DiscoveryId>
+                <TargetInstanceId>$Target/Id$</TargetInstanceId>
+                <TaskTimeoutSeconds>300</TaskTimeoutSeconds>
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="DiscoveryTrigger">
+                <Node ID="PS" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.BaseData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
+    </ModuleTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="Sample.Computer.Extended.Discovery" Comment="Discover Extended Properties using Registry" Enabled="true" Target="Windows!Microsoft.Windows.Computer" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <!-- IN previous Fragment (computer class.mpx we declared our class now are are discovering the instances using the 
+    Microsoft.Windows.RegistryDiscoveryProvider the reason behind this provider is it lets multiple keys to be discovered at once. 
+    -->
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Sample.Computer.Extended">
+            <Property TypeID="Sample.Computer.Extended" PropertyID="Application" />
+            <Property TypeID="Sample.Computer.Extended" PropertyID="BuildPlatform" />
+            <Property TypeID="Sample.Computer.Extended" PropertyID="Environment" />
+            <Property TypeID="Sample.Computer.Extended" PropertyID="Location" />
+            <Property TypeID="Sample.Computer.Extended" PropertyID="Purpose" />
+            <Property TypeID="Sample.Computer.Extended" PropertyID="Team" />
+            <Property TypeID="Sample.Computer.Extended" PropertyID="OperatingSystem" />
+          </DiscoveryClass>
+        </DiscoveryTypes>
+        <DataSource ID="ComputerDiscoveryDS" TypeID="Windows!Microsoft.Windows.RegistryDiscoveryProvider">
+          <ComputerName>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/NetworkName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <AttributeName>Application</AttributeName>
+              <Path>SOFTWARE\MyOrg\Application</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>BuildPlatform</AttributeName>
+              <Path>SOFTWARE\MyOrg\BuildPlatform</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>Environment</AttributeName>
+              <Path>SOFTWARE\MyOrg\Environment</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>Location</AttributeName>
+              <Path>SOFTWARE\MyOrg\Location</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>OperatingSystem</AttributeName>
+              <Path>SOFTWARE\MyOrg\OperatingSystem</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>Purpose</AttributeName>
+              <Path>SOFTWARE\MyOrg\Purpose</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>Team</AttributeName>
+              <Path>SOFTWARE\MyOrg\Team</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>14400</Frequency>
+          <ClassId>$MPElement[Name="Sample.Computer.Extended"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Sample.Computer.Extended"]/Application$</Name>
+                <Value>$Data/Values/Application$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Sample.Computer.Extended"]/BuildPlatform$</Name>
+                <Value>$Data/Values/BuildPlatform$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Sample.Computer.Extended"]/Environment$</Name>
+                <Value>$Data/Values/Environment$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Sample.Computer.Extended"]/Location$</Name>
+                <Value>$Data/Values/Location$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Sample.Computer.Extended"]/OperatingSystem$</Name>
+                <Value>$Data/Values/OperatingSystem$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Sample.Computer.Extended"]/Purpose$</Name>
+                <Value>$Data/Values/Purpose$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="Sample.Computer.Extended"]/Team$</Name>
+                <Value>$Data/Values/Team$</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Tasks>
+      <Task ID="SampleExtended.Sample.Extended.Task.RemoveRegistryKeys" Accessibility="Internal" Target="Windows!Microsoft.Windows.Computer" Enabled="true" Timeout="300" Remotable="true">
+        <Category>Operations</Category>
+        <ProbeAction ID="Probe" TypeID="Windows!Microsoft.Windows.PowerShellProbe" RunAs="SC!Microsoft.SystemCenter.LocalAgentElevatedAccount">
+          <ScriptName>RemoveRegistryKeys.ps1</ScriptName>
+          <ScriptBody><![CDATA[<#
+.SYNOPSIS
+	Removes registry keys for Sample - Extended Discovery.
+.DESCRIPTION
+	This script is used by the Sample - Extended discovery to 
+	remove registry keys for Servers.
+.PARAMETER registyLocation
+	The registry hive
+.PARAMETER registryPath
+	The the registry hive sub levels
+.PARAMETER finalLocation
+	The location of the strings
+
+#>
+# -----------------------------------------------------------------------------
+# Script Name: RemoveRegistryKeys.ps1
+# ----------------------
+$registyLocation = 'HKLM:\'
+$registryPath = "SOFTWARE\MyOrg"
+$finalLocation = Join-Path $registyLocation $registryPath
+
+If (Test-Path $finalLocation) {
+
+    Write-Host -ForegroundColor Yellow "$finalLocation exists, removing..."
+
+    Remove-Item $finalLocation -Recurse
+    
+    Write-Host -ForegroundColor Green "$finalLocation has been removed."
+    
+    }
+
+Else {
+
+    Write-Host -ForegroundColor Red "$finalLocation does not exist. Exiting"
+
+    }
+
+]]></ScriptBody>
+          <SnapIns />
+          <Parameters />
+          <TimeoutSeconds>300</TimeoutSeconds>
+          <StrictErrorHandling>true</StrictErrorHandling>
+        </ProbeAction>
+      </Task>
+      <Task ID="SampleExtended.Task.GetRegistryKeys" Accessibility="Internal" Target="Windows!Microsoft.Windows.Computer" Enabled="true" Timeout="300" Remotable="true">
+        <Category>Operations</Category>
+        <ProbeAction ID="Probe" TypeID="Windows!Microsoft.Windows.PowerShellProbe" RunAs="SC!Microsoft.SystemCenter.LocalAgentElevatedAccount">
+          <ScriptName>GetRegistryKeys.ps1</ScriptName>
+          <ScriptBody><![CDATA[<#
+.SYNOPSIS
+	Gets registry keys for Sample - Extended Discovery.
+.DESCRIPTION
+	This script is used by the Sample - Extended discovery to 
+	remove registry keys for Servers.
+.PARAMETER registyLocation
+	The registry hive
+.PARAMETER registryPath
+	The the registry hive sub levels
+.PARAMETER finalLocation
+	The location of the strings
+
+#>
+# -----------------------------------------------------------------------------
+# Script Name: GetRegistryKeys.ps1
+# ----------------------
+
+## Set locations
+$registyLocation = 'HKLM:\'
+$registryPath = "SOFTWARE\MyOrg"
+$finalLocation = join-path $registyLocation $registryPath
+
+If (Test-Path -Path $finalLocation) {
+
+    Write-Host -ForegroundColor Green "$finalLocation exists"
+    Get-Item -Path $finalLocation
+
+	}
+
+
+Else {
+
+    Write-Host -ForegroundColor Red "Registry keys are not present. Run '- Set Registry Keys' task to set keys."
+
+	}
+
+]]></ScriptBody>
+          <SnapIns />
+          <Parameters />
+          <TimeoutSeconds>300</TimeoutSeconds>
+          <StrictErrorHandling>true</StrictErrorHandling>
+        </ProbeAction>
+      </Task>
+      <Task ID="SampleExtended.Task.SetRegistryKeys" Accessibility="Internal" Target="Windows!Microsoft.Windows.Computer" Enabled="true" Timeout="300" Remotable="true">
+        <Category>Operations</Category>
+        <WriteAction ID="WriteAction" TypeID="SampleExtended.WriteAction.SetRegistryKeys" RunAs="SC!Microsoft.SystemCenter.LocalAgentElevatedAccount">
+          <Application></Application>
+          <BuildPlatform></BuildPlatform>
+          <Environment></Environment>
+          <Location></Location>
+          <Purpose></Purpose>
+          <Team></Team>
+          <OperatingSystem></OperatingSystem>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Task>
+    </Tasks>
+  </Monitoring>
+  <Presentation>
+    <Views>
+      <View ID="SampleExtended.View.ExtendedProperties" Accessibility="Internal" Target="Sample.Computer.Extended" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+      </View>
+    </Views>
+    <Folders>
+      <Folder ID="SampleExtended.Folder" Accessibility="Internal" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+    <FolderItems>
+      <FolderItem ElementID="SampleExtended.View.ExtendedProperties" Folder="SampleExtended.Folder" ID="SampleExtended.View.ExtendedProperties.FolderItem" />
+    </FolderItems>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="Sample.Computer.Extended">
+          <Name>Sample Extended Class</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended" SubElementID="Application">
+          <Name>Application</Name>
+          <Description>The application the server runs</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended" SubElementID="BuildPlatform">
+          <Name>Build Platform</Name>
+          <Description>The platform used to deploy this server</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended" SubElementID="Environment">
+          <Name>Environment</Name>
+          <Description>The environment the server resides in</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended" SubElementID="Location">
+          <Name>Location</Name>
+          <Description>Where the server is located</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended" SubElementID="Purpose">
+          <Name>Purpose</Name>
+          <Description>The purpose of the server</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended" SubElementID="Team">
+          <Name>Team</Name>
+          <Description>The team that owns the server</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended" SubElementID="OperatingSystem">
+          <Name>OperatingSystem</Name>
+          <Description>The Operating System Installed</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended.Discovery" SubElementID="ComputerDiscoveryDS">
+          <Name>Sample Computer Extended Discovery DataSource</Name>
+          <Description>Registry Discovery Data Source based on Microsoft.Windows.RegistryDiscoveryProvider</Description>
+        </DisplayString>
+        <DisplayString ElementID="Sample.Computer.Extended.Discovery">
+          <Name>Sample Computer Extended Computer Discovery</Name>
+          <Description>Registry Discovery based on Microsoft.Windows.RegistryDiscoveryProvider</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended">
+          <Name>Sample - Extended</Name>
+          <Description>Sample Extended discovery and monitoring</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.DiscoveryTrigger">
+          <Name>Sample Extended -  discovery trigger write action</Name>
+          <Description>Write action module that allows for triggering of discovery on-demand, implemented publicly.</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.DiscoveryTrigger" SubElementID="DiscoveryId">
+          <Name>Discovery Id</Name>
+          <Description>The Guid of the Discovery, wrapped in {}</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.DiscoveryTrigger" SubElementID="TargetInstanceId">
+          <Name>Target Instance Id</Name>
+          <Description>The Guid of the SCOM class instance you want to run the discovery against.</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.DiscoveryTrigger" SubElementID="TaskTimeoutSeconds">
+          <Name>Timeout (Seconds)</Name>
+          <Description>The number of seconds before the trigger attempt should be aborted.</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys">
+          <Name>Sample Extended - Set Registry Keys write action</Name>
+          <Description>Sets registry keys on the selected server.</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys" SubElementID="Application">
+          <Name>Application</Name>
+          <Description>Sample Extended - Application key</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys" SubElementID="BuildPlatform">
+          <Name>BuildPlatform</Name>
+          <Description>Sample Extended - Build Platform key</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys" SubElementID="Environment">
+          <Name>Environment</Name>
+          <Description>Sample Extended - Environment key</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys" SubElementID="Location">
+          <Name>Location</Name>
+          <Description>Sample Extended - Location key</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys" SubElementID="Purpose">
+          <Name>Purpose</Name>
+          <Description>Sample Extended - Purpose key</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys" SubElementID="Team">
+          <Name>Team</Name>
+          <Description>Sample Extended - Team key</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.WriteAction.SetRegistryKeys" SubElementID="OperatingSystem">
+          <Name>OperatingSystem</Name>
+          <Description>Sample Extended - Operating System key</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.Sample.Extended.Task.RemoveRegistryKeys">
+          <Name>- Remove Registry Keys</Name>
+          <Description>Removes the Sample - Extended registry keys</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.Task.GetRegistryKeys">
+          <Name>- Get Registry Keys</Name>
+          <Description>Gets the currently set Sample Extended Discovery registry keys</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.Task.SetRegistryKeys">
+          <Name>- Set Registry Keys</Name>
+          <Description>Sets Sample Extended Discovery Registry keys</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.Folder">
+          <Name>Sample - Extended</Name>
+          <Description>This folder contains views contained in the Sample - Extended Management Pack</Description>
+        </DisplayString>
+        <DisplayString ElementID="SampleExtended.View.ExtendedProperties">
+          <Name>Sample - Extended Properties</Name>
+          <Description>Sample - Extended Property View</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles></KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>
