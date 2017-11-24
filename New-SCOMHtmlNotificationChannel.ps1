@@ -8,7 +8,7 @@
 
     By default notification bodies will include appropriate links to the SCOM Web Console, but by specifying the -SquaredUpURL parameter links will use Squared Up instead.
 
-    Please ensure that a management group connection exists prior to running the script - either run this from the Operations Manager shell or run New-SCOMManagementGroupConnection.
+    Please ensure that a management group connection exists prior to running the script - either run this from the Operations Manager shell or run New-SCOMManagementGroupConnection (remembering to import the OperationsManager module if on PowerShell v2).
 .PARAMETER SquaredUpURL
     The root URL of the Squared Up web console.  If a protocol is not specified, http:// will be prepended.  If this value is not specified, link will use the SCOM Web console instead.
 .PARAMETER BaseSmtpChannel
@@ -83,14 +83,14 @@ Param(
         ParameterSetName = 'New',
         Mandatory = $false
     )]
-    [ValidateRange(0,[int]::MaxValue)]
+    [ValidateRange(0,65535)]
     [int]$SMTPServerPort = 25,
 
     [Parameter(
         ParameterSetName = 'New',
         Mandatory = $false
     )]
-    [ValidateRange(1,[int]::MaxValue)]
+    [ValidateRange(1,2147483647)]
     [int]$SMTPRetryMins = 5,
 
     [Parameter(
@@ -444,8 +444,9 @@ function Get-SCOMNotificationAction {
         [string]$DisplayNameOrId
     )
     # Test if we have a GUID or a displayname specified for the base channel
-    $guid = [guid]::Empty
-    if ([guid]::TryParse($DisplayNameOrId, [ref] $guid)) {
+    
+    if ($DisplayNameOrId -match '^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$') {
+        $guid = [guid]$DisplayNameOrId
         return (Get-SCOMManagementGroup -ErrorAction Stop).GetNotificationAction($guid)
     }
     else {
