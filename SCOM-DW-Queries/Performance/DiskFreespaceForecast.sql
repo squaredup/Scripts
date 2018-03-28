@@ -1,4 +1,4 @@
--- Based on the last 90 days, calculate a trend forcast for when the logicaldisk will run out of space, in days
+-- Based on the last 90 days, calculate a trend forecast for when the logicaldisk will run out of space, in days
 select Convert(int,-(Intercept + N*Slope) / Slope) as DaysRemaining
 from
 (

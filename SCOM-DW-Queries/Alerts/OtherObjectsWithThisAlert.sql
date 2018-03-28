@@ -1,4 +1,4 @@
--- Where else is this Alert occuring (most recent 20)
+-- Where else is this Alert occurring (most recent 20)
 SELECT 
     me.Path, me.DisplayName, COUNT(*) AS 'Count', MAX(a.RaisedDateTime) AS 'Most Recent'
 FROM 
